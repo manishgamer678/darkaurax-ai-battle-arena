@@ -1,0 +1,93 @@
+<style>
+/* Movable Fire Button */
+#fireButton,
+#fireBtn,
+#shootButton,
+#shootBtn,
+.fire-button,
+.fire-btn,
+.shoot-button {
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+</style>
+
+<script>
+(function () {
+  const selectors = [
+    '#fireButton', '#fireBtn',
+    '#shootButton', '#shootBtn',
+    '.fire-button', '.fire-btn',
+    '.shoot-button'
+  ];
+
+  function enableMove(button) {
+    if (button.dataset.moveEnabled) return;
+    button.dataset.moveEnabled = 'true';
+
+    button.style.touchAction = 'none';
+
+    let dragging = false;
+    let startX = 0, startY = 0;
+    let originalLeft = 0, originalTop = 0;
+
+    button.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+
+      dragging = true;
+      const rect = button.getBoundingClientRect();
+
+      startX = e.clientX;
+      startY = e.clientY;
+      originalLeft = rect.left;
+      originalTop = rect.top;
+
+      button.style.position = 'fixed';
+      button.style.left = rect.left + 'px';
+      button.style.top = rect.top + 'px';
+      button.style.right = 'auto';
+      button.style.bottom = 'auto';
+      button.style.zIndex = '99999';
+
+      try { button.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+
+    button.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+
+      const x = Math.max(0, Math.min(
+        window.innerWidth - button.offsetWidth,
+        originalLeft + e.clientX - startX
+      ));
+
+      const y = Math.max(0, Math.min(
+        window.innerHeight - button.offsetHeight,
+        originalTop + e.clientY - startY
+      ));
+
+      button.style.left = x + 'px';
+      button.style.top = y + 'px';
+    });
+
+    function stopDragging() {
+      dragging = false;
+    }
+
+    button.addEventListener('pointerup', stopDragging);
+    button.addEventListener('pointercancel', stopDragging);
+  }
+
+  function findButtons() {
+    selectors.forEach(selector => {
+      document.querySelectorAll(selector).forEach(enableMove);
+    });
+  }
+
+  findButtons();
+  new MutationObserver(findButtons).observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+})();
+</script>
