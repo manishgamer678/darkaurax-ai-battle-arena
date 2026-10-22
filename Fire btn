@@ -1,0 +1,149 @@
+<style>
+  .fire-drag-enabled {
+    touch-action: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    cursor: grab !important;
+    z-index: 99999 !important;
+  }
+
+  #fire-drag-helper {
+    position: fixed;
+    right: 12px;
+    bottom: 100px;
+    z-index: 999999;
+    background: #00e5ff;
+    color: #101820;
+    border: 2px solid white;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+</style>
+
+<button id="fire-drag-helper">MOVE FIRE BUTTON</button>
+
+<script>
+(function () {
+  const possibleSelectors = [
+    '#fireButton',
+    '#fireBtn',
+    '#shootButton',
+    '#shootBtn',
+    '#fire-button',
+    '.fire-button',
+    '.fire-btn',
+    '.shoot-button',
+    '[aria-label="Fire"]',
+    '[aria-label="Shoot"]'
+  ];
+
+  let fireButton = null;
+  let dragging = false;
+  let startX = 0, startY = 0;
+  let initialX = 0, initialY = 0;
+
+  function findFireButton() {
+    for (const selector of possibleSelectors) {
+      const element = document.querySelector(selector);
+      if (element) return element;
+    }
+
+    // Fallback: find a button labelled FIRE or SHOOT.
+    return [...document.querySelectorAll('button, [role="button"]')]
+      .find(el => /^(fire|shoot|🔥)$/i.test(
+        (el.innerText || el.getAttribute('aria-label') || '').trim()
+      ));
+  }
+
+  function setup() {
+    fireButton = findFireButton();
+    if (!fireButton) return;
+
+    fireButton.classList.add('fire-drag-enabled');
+
+    const saved = localStorage.getItem('darkaurax-fire-position');
+    if (saved) {
+      try {
+        const pos = JSON.parse(saved);
+        fireButton.style.position = 'fixed';
+        fireButton.style.left = pos.left + 'px';
+        fireButton.style.top = pos.top + 'px';
+        fireButton.style.right = 'auto';
+        fireButton.style.bottom = 'auto';
+      } catch (_) {}
+    }
+  }
+
+  document.getElementById('fire-drag-helper')
+    .addEventListener('click', function () {
+      setup();
+
+      if (!fireButton) {
+        alert('Fire button nahi mila. index.html mein uska actual ID/class chahiye.');
+        return;
+      }
+
+      const rect = fireButton.getBoundingClientRect();
+      fireButton.style.position = 'fixed';
+      fireButton.style.left = rect.left + 'px';
+      fireButton.style.top = rect.top + 'px';
+      fireButton.style.right = 'auto';
+      fireButton.style.bottom = 'auto';
+
+      alert('Ab FIRE button ko pakadkar drag karo!');
+    });
+
+  document.addEventListener('pointerdown', function (e) {
+    if (!fireButton || e.target !== fireButton) return;
+
+    dragging = true;
+    const rect = fireButton.getBoundingClientRect();
+    startX = e.clientX;
+    startY = e.clientY;
+    initialX = rect.left;
+    initialY = rect.top;
+
+    e.stopPropagation();
+  }, true);
+
+  document.addEventListener('pointermove', function (e) {
+    if (!dragging || !fireButton) return;
+
+    const x = Math.max(0, Math.min(
+      innerWidth - fireButton.offsetWidth,
+      initialX + e.clientX - startX
+    ));
+    const y = Math.max(0, Math.min(
+      innerHeight - fireButton.offsetHeight,
+      initialY + e.clientY - startY
+    ));
+
+    fireButton.style.left = x + 'px';
+    fireButton.style.top = y + 'px';
+  }, true);
+
+  function stopDrag() {
+    if (!dragging) return;
+    dragging = false;
+
+    if (fireButton) {
+      const rect = fireButton.getBoundingClientRect();
+      localStorage.setItem('darkaurax-fire-position', JSON.stringify({
+        left: rect.left,
+        top: rect.top
+      }));
+    }
+  }
+
+  document.addEventListener('pointerup', stopDrag, true);
+  document.addEventListener('pointercancel', stopDrag, true);
+
+  setup();
+  new MutationObserver(setup).observe(document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+})();
+</script>
