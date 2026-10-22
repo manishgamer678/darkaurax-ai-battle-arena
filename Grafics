@@ -1,0 +1,41 @@
+<style>
+/* DARKAURAX GRAPHICS FIX */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #101820 !important;
+}
+
+/* Balanced gaming colours */
+canvas {
+  filter: saturate(0.85) contrast(1.05) brightness(1.04);
+}
+
+/* Improve game display on mobile */
+#game-container,
+#game,
+.game-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Make buttons easier to see */
+button {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Landscape game display */
+@media (orientation: landscape) {
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+</style>
